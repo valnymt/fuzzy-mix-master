@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 // ─── Turntable ───────────────────────────────────────────────
 const Turntable = ({ label, bpm, glowColor, isPlaying, onTogglePlay }: {
@@ -134,8 +135,14 @@ const Index = () => {
     heartRate: 65, weather: 40, light: 70, timeOfDay: 50, mood: 60, taskFocus: 30, caffeine: 80, social: 20,
   });
   const [knobs, setKnobs] = useState({ eq1Hi: 60, eq1Mid: 50, eq1Low: 70, eq2Hi: 55, eq2Mid: 65, eq2Low: 45, filter1: 50, filter2: 50 });
+  const { status, sendInputs, audioUrl } = useWebSocket();
 
   const bpm = Math.round(70 + (inputs.heartRate / 100) * 90);
+
+  // Send inputs to Flask whenever they change
+  useEffect(() => {
+    sendInputs({ inputs, crossfader, leftPlaying, rightPlaying, activePads: Array.from(activePads), knobs });
+  }, [inputs, crossfader, leftPlaying, rightPlaying, activePads, knobs, sendInputs]);
 
   const togglePad = (i: number) => {
     setActivePads(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; });
@@ -150,10 +157,12 @@ const Index = () => {
             Fuzzy<span className="text-primary">Mix</span>
           </h1>
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-accent animate-pulse-glow" />
-            <span className="text-xs font-mono text-muted-foreground">{bpm} BPM • ONLINE</span>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: status === "connected" ? "hsl(var(--accent))" : status === "connecting" ? "hsl(55,100%,55%)" : "hsl(0,100%,50%)" }} />
+            <span className="text-xs font-mono text-muted-foreground">{bpm} BPM • {status === "connected" ? "LIVE" : status === "connecting" ? "CONNECTING…" : "OFFLINE"}</span>
           </div>
         </div>
+
+        {audioUrl && <audio src={audioUrl} autoPlay loop className="hidden" />}
 
         {/* Controller Body */}
         <div className="relative rounded-xl border border-border bg-card overflow-hidden"
