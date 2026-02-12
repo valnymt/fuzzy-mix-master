@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['Orbitron', 'sans-serif'],
+        mono: ['Share Tech Mono', 'monospace'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +50,21 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        neon: {
+          cyan: "hsl(var(--neon-cyan))",
+          magenta: "hsl(var(--neon-magenta))",
+          green: "hsl(var(--neon-green))",
+          amber: "hsl(var(--neon-amber))",
+          blue: "hsl(var(--neon-blue))",
+          red: "hsl(var(--neon-red))",
+          purple: "hsl(var(--neon-purple))",
+          yellow: "hsl(var(--neon-yellow))",
+        },
+        surface: {
+          dark: "hsl(var(--surface-dark))",
+          mid: "hsl(var(--surface-mid))",
+          light: "hsl(var(--surface-light))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
