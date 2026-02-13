@@ -7,8 +7,8 @@ interface FuzzyPayload {
   crossfader: number;
   leftPlaying: boolean;
   rightPlaying: boolean;
-  activePads: number[];
   knobs: Record<string, number>;
+  activePads?: number[];
 }
 
 interface UseWebSocketReturn {
