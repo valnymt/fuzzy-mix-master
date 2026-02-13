@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { LeftPads, RightPads } from "@/components/PerformancePads";
 
 // ─── Turntable ───────────────────────────────────────────────
 const Turntable = ({ label, bpm, glowColor, isPlaying, onTogglePlay }: {
@@ -36,24 +37,6 @@ const Turntable = ({ label, bpm, glowColor, isPlaying, onTogglePlay }: {
   );
 };
 
-// ─── Performance Pad ─────────────────────────────────────────
-const PerformancePad = ({ color, label, onTrigger, isActive = false }: {
-  color: string; label: string; onTrigger: () => void; isActive?: boolean;
-}) => {
-  const [isPressed, setIsPressed] = useState(false);
-  return (
-    <motion.button
-      className="relative w-14 h-14 md:w-16 md:h-16 rounded-md border overflow-hidden"
-      style={{ backgroundColor: isActive ? color : `${color}30`, borderColor: color, boxShadow: isActive ? `0 0 16px ${color}80, inset 0 0 10px ${color}40` : `inset 0 0 6px ${color}20` }}
-      whileTap={{ scale: 0.9 }}
-      onMouseDown={() => { setIsPressed(true); onTrigger(); }}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseLeave={() => setIsPressed(false)}>
-      {isPressed && <motion.div className="absolute inset-0" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ backgroundColor: color }} />}
-      <span className="relative z-10 text-[9px] font-display font-bold uppercase tracking-wider text-foreground/80">{label}</span>
-    </motion.button>
-  );
-};
 
 // ─── Fader Slider ────────────────────────────────────────────
 const FaderSlider = ({ label, value, onChange, min = 0, max = 100, glowColor = "hsl(var(--primary))", labelTop, labelBottom }: {
@@ -109,11 +92,6 @@ const RotaryKnob = ({ label, value, onChange, min = 0, max = 100, glowColor = "h
   );
 };
 
-// ─── Config ──────────────────────────────────────────────────
-const PAD_COLORS_L = ["hsl(0,100%,55%)", "hsl(35,100%,55%)", "hsl(55,100%,55%)", "hsl(150,100%,45%)", "hsl(190,100%,50%)", "hsl(220,100%,60%)", "hsl(270,100%,60%)", "hsl(320,100%,55%)"];
-const PAD_COLORS_R = [...PAD_COLORS_L].reverse();
-const PAD_LABELS = ["CUE", "LOOP", "FX1", "FX2", "SMPL", "ROLL", "GATE", "SYNC"];
-
 // Life Context — 8 Sliders
 const SLIDERS = [
   { key: "energy", label: "Energy", top: "Hyper", bottom: "Calm", color: "hsl(0,100%,55%)" },
@@ -143,7 +121,6 @@ const Index = () => {
   const [leftPlaying, setLeftPlaying] = useState(true);
   const [rightPlaying, setRightPlaying] = useState(false);
   const [crossfader, setCrossfader] = useState(50);
-  const [activePads, setActivePads] = useState<Set<number>>(new Set([0, 4]));
   const [inputs, setInputs] = useState<Record<string, number>>({
     energy: 65, atmosphere: 40, task: 50, mood: 60, social: 20, timeOfDay: 50, caffeine: 80, focus: 30,
   });
@@ -156,12 +133,8 @@ const Index = () => {
 
   // Send inputs to Flask whenever they change
   useEffect(() => {
-    sendInputs({ inputs, crossfader, leftPlaying, rightPlaying, activePads: Array.from(activePads), knobs });
-  }, [inputs, crossfader, leftPlaying, rightPlaying, activePads, knobs, sendInputs]);
-
-  const togglePad = (i: number) => {
-    setActivePads(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; });
-  };
+    sendInputs({ inputs, crossfader, leftPlaying, rightPlaying, knobs });
+  }, [inputs, crossfader, leftPlaying, rightPlaying, knobs, sendInputs]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -185,9 +158,7 @@ const Index = () => {
 
           {/* Top: Pads + Knobs */}
           <div className="flex items-start justify-between p-4 border-b border-border">
-            <div className="grid grid-cols-4 gap-2">
-              {PAD_LABELS.map((l, i) => <PerformancePad key={`l${i}`} color={PAD_COLORS_L[i]} label={l} isActive={activePads.has(i)} onTrigger={() => togglePad(i)} />)}
-            </div>
+            <LeftPads />
 
             <div className="hidden md:flex flex-col items-center gap-3">
               <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground mb-1">Musical Soul</span>
@@ -198,9 +169,7 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              {PAD_LABELS.map((l, i) => <PerformancePad key={`r${i}`} color={PAD_COLORS_R[i]} label={l} isActive={activePads.has(i + 8)} onTrigger={() => togglePad(i + 8)} />)}
-            </div>
+            <RightPads />
           </div>
 
           {/* Middle: Turntables + Faders */}
