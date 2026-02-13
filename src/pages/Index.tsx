@@ -114,15 +114,28 @@ const PAD_COLORS_L = ["hsl(0,100%,55%)", "hsl(35,100%,55%)", "hsl(55,100%,55%)",
 const PAD_COLORS_R = [...PAD_COLORS_L].reverse();
 const PAD_LABELS = ["CUE", "LOOP", "FX1", "FX2", "SMPL", "ROLL", "GATE", "SYNC"];
 
-const INPUTS = [
-  { key: "heartRate", label: "Activity", top: "Chaotic", bottom: "Still", color: "hsl(0,100%,55%)" },
-  { key: "weather", label: "Weather", top: "Clear", bottom: "Stormy", color: "hsl(220,100%,60%)" },
-  { key: "light", label: "Light", top: "Bright", bottom: "Dark", color: "hsl(55,100%,55%)" },
-  { key: "timeOfDay", label: "Time", top: "3PM", bottom: "3AM", color: "hsl(35,100%,55%)" },
+// Life Context — 8 Sliders
+const SLIDERS = [
+  { key: "energy", label: "Energy", top: "Hyper", bottom: "Calm", color: "hsl(0,100%,55%)" },
+  { key: "atmosphere", label: "Atmosphere", top: "Vast", bottom: "Intimate", color: "hsl(220,100%,60%)" },
+  { key: "task", label: "Task", top: "Complex", bottom: "Simple", color: "hsl(55,100%,55%)" },
   { key: "mood", label: "Mood", top: "Euphoric", bottom: "Sad", color: "hsl(320,100%,55%)" },
-  { key: "taskFocus", label: "Focus", top: "Party", bottom: "Deep", color: "hsl(270,100%,60%)" },
-  { key: "caffeine", label: "Caffeine", top: "Wired", bottom: "Tired", color: "hsl(150,100%,45%)" },
   { key: "social", label: "Social", top: "Crowd", bottom: "Solo", color: "hsl(190,100%,50%)" },
+  { key: "timeOfDay", label: "Time", top: "3PM", bottom: "3AM", color: "hsl(35,100%,55%)" },
+  { key: "caffeine", label: "Caffeine", top: "Wired", bottom: "Tired", color: "hsl(150,100%,45%)" },
+  { key: "focus", label: "Focus", top: "Laser", bottom: "Scatter", color: "hsl(270,100%,60%)" },
+];
+
+// Musical Soul — 8 Knobs
+const KNOB_CONFIGS = [
+  { key: "warmth", label: "Warmth", color: "hsl(35,100%,55%)" },
+  { key: "texture", label: "Texture", color: "hsl(220,100%,60%)" },
+  { key: "clarity", label: "Clarity", color: "hsl(190,100%,50%)" },
+  { key: "vibration", label: "Vibration", color: "hsl(270,100%,60%)" },
+  { key: "grit", label: "Grit", color: "hsl(0,100%,55%)" },
+  { key: "presence", label: "Presence", color: "hsl(150,100%,45%)" },
+  { key: "width", label: "Width", color: "hsl(320,100%,55%)" },
+  { key: "chaos", label: "Chaos", color: "hsl(55,100%,55%)" },
 ];
 
 // ─── Main Controller ────────────────────────────────────────
@@ -132,12 +145,14 @@ const Index = () => {
   const [crossfader, setCrossfader] = useState(50);
   const [activePads, setActivePads] = useState<Set<number>>(new Set([0, 4]));
   const [inputs, setInputs] = useState<Record<string, number>>({
-    heartRate: 65, weather: 40, light: 70, timeOfDay: 50, mood: 60, taskFocus: 30, caffeine: 80, social: 20,
+    energy: 65, atmosphere: 40, task: 50, mood: 60, social: 20, timeOfDay: 50, caffeine: 80, focus: 30,
   });
-  const [knobs, setKnobs] = useState({ eq1Hi: 60, eq1Mid: 50, eq1Low: 70, eq2Hi: 55, eq2Mid: 65, eq2Low: 45, filter1: 50, filter2: 50 });
+  const [knobs, setKnobs] = useState<Record<string, number>>({
+    warmth: 50, texture: 40, clarity: 60, vibration: 35, grit: 25, presence: 55, width: 50, chaos: 20,
+  });
   const { status, sendInputs, audioUrl } = useWebSocket();
 
-  const bpm = Math.round(70 + (inputs.heartRate / 100) * 90);
+  const bpm = Math.round(70 + (inputs.energy / 100) * 90);
 
   // Send inputs to Flask whenever they change
   useEffect(() => {
@@ -175,22 +190,11 @@ const Index = () => {
             </div>
 
             <div className="hidden md:flex flex-col items-center gap-3">
-              <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground mb-1">EQ / Filter</span>
-              <div className="flex gap-6">
-                <div className="flex flex-col items-center gap-2">
-                  <RotaryKnob label="HI" value={knobs.eq1Hi} onChange={v => setKnobs(p => ({ ...p, eq1Hi: v }))} glowColor="hsl(190,100%,50%)" size={40} />
-                  <RotaryKnob label="MID" value={knobs.eq1Mid} onChange={v => setKnobs(p => ({ ...p, eq1Mid: v }))} glowColor="hsl(190,100%,50%)" size={40} />
-                  <RotaryKnob label="LOW" value={knobs.eq1Low} onChange={v => setKnobs(p => ({ ...p, eq1Low: v }))} glowColor="hsl(190,100%,50%)" size={40} />
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <RotaryKnob label="GAIN" value={knobs.filter1} onChange={v => setKnobs(p => ({ ...p, filter1: v }))} glowColor="hsl(320,100%,55%)" size={44} />
-                  <RotaryKnob label="GAIN" value={knobs.filter2} onChange={v => setKnobs(p => ({ ...p, filter2: v }))} glowColor="hsl(150,100%,45%)" size={44} />
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <RotaryKnob label="HI" value={knobs.eq2Hi} onChange={v => setKnobs(p => ({ ...p, eq2Hi: v }))} glowColor="hsl(320,100%,55%)" size={40} />
-                  <RotaryKnob label="MID" value={knobs.eq2Mid} onChange={v => setKnobs(p => ({ ...p, eq2Mid: v }))} glowColor="hsl(320,100%,55%)" size={40} />
-                  <RotaryKnob label="LOW" value={knobs.eq2Low} onChange={v => setKnobs(p => ({ ...p, eq2Low: v }))} glowColor="hsl(320,100%,55%)" size={40} />
-                </div>
+              <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground mb-1">Musical Soul</span>
+              <div className="grid grid-cols-4 gap-x-4 gap-y-2">
+                {KNOB_CONFIGS.map(cfg => (
+                  <RotaryKnob key={cfg.key} label={cfg.label} value={knobs[cfg.key]} onChange={v => setKnobs(p => ({ ...p, [cfg.key]: v }))} glowColor={cfg.color} size={40} />
+                ))}
               </div>
             </div>
 
@@ -204,9 +208,9 @@ const Index = () => {
             <Turntable label="Melody" bpm={bpm} glowColor="hsl(190,100%,50%)" isPlaying={leftPlaying} onTogglePlay={() => setLeftPlaying(!leftPlaying)} />
 
             <div className="flex-1 flex flex-col items-center gap-4">
-              <span className="text-[9px] font-display uppercase tracking-[0.3em] text-muted-foreground">Fuzzy Input Matrix</span>
+              <span className="text-[9px] font-display uppercase tracking-[0.3em] text-muted-foreground">Life Context</span>
               <div className="flex gap-2 md:gap-3 justify-center flex-wrap">
-                {INPUTS.map(cfg => <FaderSlider key={cfg.key} label={cfg.label} value={inputs[cfg.key]} onChange={v => setInputs(p => ({ ...p, [cfg.key]: v }))} glowColor={cfg.color} labelTop={cfg.top} labelBottom={cfg.bottom} />)}
+                {SLIDERS.map(cfg => <FaderSlider key={cfg.key} label={cfg.label} value={inputs[cfg.key]} onChange={v => setInputs(p => ({ ...p, [cfg.key]: v }))} glowColor={cfg.color} labelTop={cfg.top} labelBottom={cfg.bottom} />)}
               </div>
               <div className="w-full max-w-xs flex flex-col items-center gap-1 mt-2">
                 <div className="flex justify-between w-full px-1">
